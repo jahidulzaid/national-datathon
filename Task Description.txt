@@ -1,0 +1,65 @@
+PoliMemeDecode – Humor That Speaks Politics
+
+
+PoliMemeDecode challenges participants to build machine learning models capable of classifying meme content into Political and Non-Political categories. The competition emphasizes understanding the intent behind memes, acknowledging that some memes may carry political messaging, satire, or commentary, rather than being purely humorous.
+
+Participants will work with a labeled dataset of meme images and aim to predict the correct category for each sample. Submissions will be evaluated using the macro-averaged F1 score, ensuring balanced assessment across both classes.
+
+Important:
+
+
+Note: To make the challenge realistic, the test dataset contains distribution-shifted memes, which may(or may not) look noticeably different from the training set. Focus on creative preprocessing and modeling strategies. A lower score does not necessarily indicate failure — the dataset is intentionally difficult.
+
+
+Description
+Competition Overview
+PoliMemeDecode challenges participants to develop machine learning models that classify meme content into two categories: Political and Non-Political. This is your opportunity to analyze meme intent, handle politically charged content responsibly, and tackle the challenge of automated political content detection in social media memes.
+
+Competition Challenge
+Participants will work with a dataset of labeled meme images. The goal is to build robust models capable of detecting the political nature of each meme, taking into account subtle contextual cues, satire, and potentially sensitive messaging.
+
+Evaluation
+Evaluation Metric: Macro F1 Score
+Submissions are evaluated using Macro F1 Score to measure classification performance across all four target categories.
+
+The top X teams (to be announced later on WhatsApp) will be required to share their notebooks via the submission link provided on WhatsApp. Detailed submission guidelines will be posted there.
+
+
+
+### **Step 1: Precision and Recall for each class**
+
+[
+\text{Precision}_i = \frac{TP_i}{TP_i + FP_i}
+]
+
+[
+\text{Recall}_i = \frac{TP_i}{TP_i + FN_i}
+]
+
+Where for class (i):
+
+* (TP_i) = true positives
+* (FP_i) = false positives
+* (FN_i) = false negatives
+
+---
+
+### **Step 2: F1 Score for each class**
+
+[
+F1_i = 2 \times \frac{\text{Precision}_i \times \text{Recall}_i}{\text{Precision}_i + \text{Recall}_i}
+]
+
+---
+
+### **Step 3: Macro F1 Score**
+
+[
+\text{Macro F1} = \frac{1}{N} \sum_{i=1}^{N} F1_i
+]
+
+Where **(N)** is the total number of classes (here, 4).
+Each class contributes equally to the final score, regardless of its size.
+
+
+

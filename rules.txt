@@ -1,0 +1,25 @@
+Strictly Prohibited
+Violation of any of the following rules may result in direct disqualification:
+
+Closed-source models
+Models without publicly available architecture, weights, or training details are disallowed to ensure transparency and reproducibility.
+
+API-based inference
+Sending test images to external APIs (OpenAI, Gemini, Claude, etc.) for prediction is forbidden. All computations must run entirely inside Kaggle.
+
+Commercial or cloud ML services
+Services like Google Vision, AWS Rekognition, Azure Cognitive Services, or similar platforms cannot be used for training or inference.
+
+External model calls or remote execution
+Querying any model hosted outside Kaggle (Openrouter, remote endpoints, private servers, tunnels, ngrok, GitHub-hosted models, etc.) is prohibited.
+
+Allowed – Open Source Only
+Fully open-source models
+Data augmentation and preprocessing
+Models fine-tuned using open-source frameworks such as Unsloth, LLaMA, or similar tools
+Pretrained models: Must credit the original source
+External datasets: Must credit the original source and comply with licensing
+Inference Rules
+All inference must run locally on Kaggle or free-tier Google Colab to ensure fair access to computational resources
+Models must be downloaded and executed within Kaggle or Google Colab infrastructure
+No external or remote inference allowed

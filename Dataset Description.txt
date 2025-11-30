@@ -1,0 +1,6 @@
+Dataset Overview
+The competition features 2860 training images and 330 testing images.
+The two target classes are:
+
+Political
+NonPolitical

@@ -1,0 +1,223 @@
+PoliMemeDecode - Humor That Speaks Politics
+===========================================
+
+COMPETITION OBJECTIVE
+---------------------
+Build a machine learning model to classify meme images into two categories:
+- Political
+- NonPolitical
+
+DATASET SUMMARY
+---------------
+Training Set:
+- Total images: 2,860 (Total size: ~308 MB)
+- Political: 853 (29.8%)
+- NonPolitical: 2,007 (70.2%)
+- File format: JPG images
+- Labels: Train.csv with Image_name and Label columns
+
+Test Set:
+- Total images: 330 (Total size: ~66 MB)
+- File format: JPG images
+- No labels provided (Test.csv only has Image_name column)
+
+Class Distribution:
+- Imbalanced dataset with ~2.35x more NonPolitical than Political memes
+- Important: Test set may have distribution shift from training set
+
+⚠️ CRITICAL: LANGUAGE-SPECIFIC CHALLENGE
+- Meme text overlays are in BANGLA (Bengali) language
+- This adds linguistic complexity beyond visual classification
+- Political context often embedded in Bangla text/cultural references
+- Standard English-centric models may miss crucial textual cues
+
+EVALUATION METRIC
+-----------------
+Macro F1 Score (equal weight to both classes regardless of size)
+
+Formula:
+1. Calculate Precision and Recall for each class
+2. Calculate F1 Score for each class: F1_i = 2 × (Precision_i × Recall_i) / (Precision_i + Recall_i)
+3. Macro F1 = Average of F1 scores across both classes
+
+IMPORTANT CONSIDERATIONS
+------------------------
+1. Distribution Shift Warning:
+   - Test dataset may look noticeably different from training set
+   - This is intentional to test model generalization
+   - Lower scores expected due to increased difficulty
+
+2. Imbalanced Classes:
+   - Training data is imbalanced (70% NonPolitical, 30% Political)
+   - Macro F1 treats both classes equally, so balance is important
+   - Consider: class weighting, SMOTE, oversampling/undersampling
+
+3. Challenge Aspects:
+   - Understanding meme intent beyond pure humor
+   - Detecting political messaging, satire, and commentary
+   - Handling subtle contextual cues in images
+   - **BANGLA TEXT**: Memes contain text in Bangla (Bengali) script
+   - Political context heavily tied to Bangla language and culture
+   - Need to extract and understand Bangla text for accurate classification
+
+STRICT RULES & CONSTRAINTS
+---------------------------
+PROHIBITED (Disqualification if violated):
+✗ Closed-source models
+✗ API-based inference (OpenAI, Gemini, Claude, etc.)
+✗ Commercial ML services (Google Vision, AWS Rekognition, Azure Cognitive Services)
+✗ External model calls or remote execution
+✗ Sending test images to external APIs
+
+ALLOWED:
+✓ Fully open-source models
+✓ Data augmentation and preprocessing
+✓ Fine-tuned models using Unsloth, LLaMA, or similar open-source frameworks
+✓ Pretrained models (must credit source)
+✓ External datasets (must credit source and comply with licensing)
+✓ All inference must run on Kaggle or free-tier Google Colab
+
+SUBMISSION REQUIREMENTS
+-----------------------
+1. Submit predictions in format: Image_name, Label
+2. 331 predictions required (330 test images + header)
+3. Labels must be exactly: "Political" or "NonPolitical"
+4. Top X teams (TBA on WhatsApp) must share notebooks
+
+RECOMMENDED APPROACH
+--------------------
+1. Exploratory Data Analysis:
+   - Visualize sample images from both classes
+   - Analyze image properties (size, format, quality)
+   - Check for any data quality issues
+   - Note: Training images average ~900x900px, test images average ~1300x1300px
+
+2. Preprocessing:
+   - Image resizing strategy CRITICAL due to size differences:
+     * Consider larger target size (e.g., 512x512 or 768x768) to preserve detail
+     * Use aspect ratio preservation with padding or center cropping
+     * Test different resize strategies during validation
+   - Normalization (ImageNet stats or custom)
+   - Handle variable aspect ratios appropriately
+   - Consider multi-scale training to handle size variations
+   
+3. Data Augmentation (ESSENTIAL for distribution shift):
+   - Geometric: rotation, flip, zoom, crop at multiple scales
+   - Color: brightness, contrast, saturation adjustments
+   - Quality degradation: compression artifacts, blur, noise
+   - Resolution variations: train on multiple scales (256, 384, 512, etc.)
+   - Mix of high and low quality augmentations to match test variability
+   - **Bangla Text Extraction**: Use OCR with Bangla language support
+     * Tools: Tesseract OCR with 'ben' (Bengali) language pack
+     * EasyOCR (supports Bangla)
+     * Google's Bengali OCR models (open-source alternatives)
+     * PaddleOCR (multi-language including Bangla)
+
+4. Model Selection:
+   - Vision Transformers (ViT, CLIP, DINOv2) - better for various scales
+   - CNNs (ResNet, EfficientNet, ConvNeXt) - proven on image classification
+   - **Multi-modal models for Bangla text understanding**:
+     * Vision-language models that support multilingual text
+     * Combine visual features with Bangla text embeddings
+     * Consider: XLM-RoBERTa for Bangla text encoding
+     * IndicBERT family models (designed for Indian languages including Bangla)
+     * MuRIL (Multilingual Representations for Indian Languages)
+   - Two-stream architecture: visual + textual (Bangla) features
+   - Consider models pretrained on diverse datasets for better generalization
+   - Ensemble methods combining multiple architectures
+
+5. Handle Class Imbalance:
+   - Class weights in loss function (2.35:1 ratio)
+   - Focal loss to focus on hard examples
+   - Oversampling minority class (Political) during training
+   - Data augmentation focused more on Political class
+   - Monitor precision/recall for both classes separately
+
+6. Training Strategy (Accounting for Distribution Shift):
+   - Transfer learning from pretrained models (strong initialization)
+   - Cross-validation (stratified K-fold, 5-fold recommended)
+   - Monitor both classes' F1 scores separately during validation
+   - Use Macro F1 as primary metric during validation
+   - Train with strong regularization (dropout, weight decay)
+   - Multi-scale training: vary input sizes during training
+   - Progressive resizing: start small, increase size gradually
+   - Consider mixup/cutmix for better generalization
+
+7. Addressing Distribution Shift (CRITICAL):
+   - Strong augmentation pipeline to improve generalization
+   - Focus on learning robust features, not memorizing training patterns
+   - Test-time augmentation (TTA) with multiple scales and crops
+   - Validate on augmented versions that simulate test characteristics
+   - Consider domain adaptation techniques if time permits
+   - Avoid overfitting to training image sizes/quality
+
+DELIVERABLES
+------------
+1. Predictions CSV file with format matching sample_submission.csv
+2. Notebook (if in top X teams) showing complete pipeline
+3. Model credits and dataset sources (if using external resources)
+
+KEY SUCCESS FACTORS
+-------------------
+- Handle class imbalance effectively (2.35:1 ratio NonPolitical:Political)
+- Build models that generalize well to shifted distributions
+- CRITICAL: Account for significant size/quality differences between train and test
+- **Extract both visual and BANGLA TEXTUAL features from memes**
+- **Understand Bangla political context and cultural references**
+- Use creative preprocessing and multi-scale augmentation
+- Focus on understanding meme intent, not just visual content
+- Leverage multilingual/Bangla-specific NLP models for text understanding
+- Combine vision and language models for comprehensive classification
+- Ensure reproducibility and compliance with competition rules
+- Consider ensemble of models trained on different scales
+- Test-time augmentation with multiple resolutions is highly recommended
+
+BANGLA TEXT PROCESSING PIPELINE EXAMPLE
+----------------------------------------
+1. Input: Meme image with Bangla text overlay
+2. Text Detection: Detect text regions (CRAFT, EAST, or similar)
+3. OCR: Extract Bangla text using Tesseract/EasyOCR/PaddleOCR
+4. Text Encoding: Use Bangla language model (IndicBERT, MuRIL, XLM-RoBERTa)
+5. Feature Fusion: Combine visual CNN/ViT features + text embeddings
+6. Classification: Binary classifier (Political/NonPolitical)
+7. Output: Predicted label
+
+RECOMMENDED TOOLS FOR BANGLA SUPPORT
+-------------------------------------
+- OCR: Tesseract (bengali), EasyOCR, PaddleOCR
+- NLP Models: IndicBERT, MuRIL, XLM-RoBERTa, BanglaBERT
+- Libraries: indic-nlp-library, bnlp (Bangla NLP toolkit)
+- Text Detection: CRAFT, EAST detector, DBNet
+- Ensure all tools are open-source and comply with competition rules
+
+TECHNICAL INSIGHTS FROM IMAGE ANALYSIS
+---------------------------------------
+1. Size Variation Challenge:
+   - Training: avg 909x891px | Test: avg 1360x1281px
+   - Strategy: Train on multiple scales or use larger base resolution
+   
+2. Quality Variation:
+   - Test set has wider quality range (4KB to 458KB)
+   - Some test images are very small/low quality (118x103px, 4KB)
+   - Augmentation should include quality degradation
+
+3. Language & Text Considerations (CRITICAL):
+   - **All meme text is in BANGLA (Bengali) script**
+   - Political memes likely contain Bangla political terminology, names, slogans
+   - OCR must support Bangla Unicode range (U+0980 to U+09FF)
+   - Consider Bangla sentiment analysis on extracted text
+   - Political context requires understanding of Bangladeshi politics/culture
+   - Text preprocessing: handle Bangla special characters and diacritics
+
+4. Preprocessing Recommendations:
+   - Target resolution: 512x512 or 768x768 (compromise between scales)
+   - Use padding instead of stretching to preserve aspect ratios
+   - Apply anti-aliasing when downsampling larger test images
+   - Consider maintaining an aspect ratio branch in architecture
+   - **Text extraction pipeline**: Detect text regions → OCR (Bangla) → Encode text
+
+5. Validation Strategy:
+   - Create validation split that simulates test distribution
+   - Artificially upscale some training images during validation
+   - Test model on various input sizes before final submission
+   - Validate Bangla OCR accuracy on sample memes
