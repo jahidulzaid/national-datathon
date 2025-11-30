@@ -20,13 +20,13 @@ torch.set_grad_enabled(False)
 # =======================
 # 1. Unzip dataset
 # =======================
-zip_path = "upload.zip"          # adjust if needed
-extract_to = "/content/"         # root folder
+# zip_path = "upload.zip"          # adjust if needed
+# extract_to = "/content/"         # root folder
 
-with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-    zip_ref.extractall(extract_to)
+# with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+#     zip_ref.extractall(extract_to)
 
-print("Done extracting!")
+# print("Done extracting!")
 
 # =======================
 # 2. Find BASE_DIR (Train/Train.csv, Test/Test.csv)
