@@ -31,7 +31,7 @@ torch.set_grad_enabled(False)
 # =======================
 # 2. Find BASE_DIR (Train/Train.csv, Test/Test.csv)
 # =======================
-default_base = Path('/content/upload')
+default_base = Path('')
 candidates = [default_base] + [p for p in default_base.iterdir() if p.is_dir()]
 BASE_DIR = None
 for candidate in candidates:
