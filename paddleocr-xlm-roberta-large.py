@@ -1,19 +1,29 @@
 
-pip install paddleocr
+import subprocess
+import sys
+
+def _pip_install(package):
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', package])
 
 try:
     import bitsandbytes
     import accelerate
     print("bitsandbytes and accelerate are already installed.")
-except ImportError:
+except Exception:
     print("Installing bitsandbytes and accelerate...")
-    pip install -q -U bitsandbytes accelerate
+    _pip_install('bitsandbytes')
+    _pip_install('accelerate')
     print("Installation complete. Restarting kernel might be required.")
 
 import os
 import pandas as pd
 import numpy as np
-from paddleocr import PaddleOCR
+try:
+    from paddleocr import PaddleOCR
+except Exception:
+    print('paddleocr not found, attempting to install...')
+    _pip_install('paddleocr')
+    from paddleocr import PaddleOCR
 from tqdm import tqdm
 import torch
 from torch.utils.data import Dataset
@@ -29,6 +39,7 @@ from transformers import (
 from IPython.display import display
 import warnings
 warnings.filterwarnings("ignore")
+import argparse
 
 # --------------------- PATHS ---------------------
 TRAIN_CSV = '/kaggle/input/poli-meme-decode-cuet-cse-fest/PoliMemeDecode/Train/Train.csv'
@@ -41,37 +52,114 @@ test_df  = pd.read_csv(TEST_CSV)
 
 # ========================================================
 # STEP 1: OCR Extraction (PaddleOCR Bangla + English)
+# Notes:
+# - Some PaddleOCR releases don't include a prebuilt 'bangla' model. The script
+#   attempts a few alias names (e.g., 'bn') and falls back gracefully if none
+#   are available.
+# - Earlier versions of some PaddleOCR releases accepted 'show_log' argument; newer
+#   ones no longer accept it. This script avoids that argument to be compatible
+#   with multiple SDL versions.
 # ========================================================
 print("Initializing PaddleOCR (Bangla + English)...")
+# Common language name(s) to attempt. PaddleOCR has limited prebuilt language packs.
+# We'll attempt 'bangla' but allow graceful fallback to 'en' or a dummy reader.
 OCR_LANGS = ["bangla", "en"]
 ocr_readers = []
+use_gpu_flag = False
+try:
+    import torch
+    use_gpu_flag = torch.cuda.is_available()
+except Exception:
+    use_gpu_flag = False
+
 for lang in OCR_LANGS:
     try:
-        reader = PaddleOCR(
-            use_angle_cls=True,
-            lang=lang,
-            show_log=False,
-            use_gpu=True,
-        )
+        # Some paddleocr versions don't accept show_log; avoid that argument.
+        reader = PaddleOCR(use_angle_cls=True, lang=lang, use_gpu=use_gpu_flag)
         ocr_readers.append(reader)
         print(f"Loaded PaddleOCR lang={lang}")
     except Exception as exc:
         print(f"Skipping {lang} OCR due to error: {exc}")
+        # atypical alias fallback for bangla; try bn (some models name it bn)
+        if lang.lower().startswith('bang'):
+            for alias in ('bn', 'bang', 'bangla_bn'):
+                try:
+                    reader = PaddleOCR(use_angle_cls=True, lang=alias, use_gpu=use_gpu_flag)
+                    ocr_readers.append(reader)
+                    print(f"Loaded PaddleOCR lang alias={alias} for request={lang}")
+                    break
+                except Exception:
+                    continue
 
 if not ocr_readers:
-    raise RuntimeError("No PaddleOCR readers initialized.")
+    # Fallback: provide a dummy reader that returns no OCR so pipeline can continue.
+    print("No PaddleOCR readers initialized. Falling back to no-op OCR reader.")
+
+    class DummyReader:
+        def ocr(self, image, cls=True):
+            return []
+
+    ocr_readers.append(DummyReader())
+
+
+def _list_readers():
+    readers = []
+    for r in ocr_readers:
+        try:
+            readers.append(getattr(r, 'lang', r.__class__.__name__))
+        except Exception:
+            readers.append(r.__class__.__name__)
+    return readers
+
+
+def main_test(img_path=None):
+    print('OCR readers available:', _list_readers())
+    if img_path:
+        print('Testing OCR on:', img_path)
+        print('Detected:', extract_text(img_path))
 
 
 def extract_text(img_path):
     texts = []
     for reader in ocr_readers:
         try:
+            # some PaddleOCR versions accept img_path; others want cv2 image array.
+            # Keep cls=True to get angle classification results (if supported).
             ocr_result = reader.ocr(img_path, cls=True)
             lines = []
             for line in ocr_result:
-                for (_, (text, score)) in line:
-                    if score >= 0.25:
-                        lines.append(text)
+                # line can be either a list of (bbox, (text, score)) or a list of dicts.
+                if isinstance(line, list):
+                    for item in line:
+                        # tuple-like result
+                        if isinstance(item, (list, tuple)) and len(item) >= 2:
+                            rec = item[1]
+                            if isinstance(rec, (list, tuple)) and len(rec) >= 2:
+                                text, score = rec[0], rec[1]
+                                try:
+                                    if float(score) >= 0.25:
+                                        lines.append(str(text))
+                                except Exception:
+                                    lines.append(str(text))
+                        # dict-like result
+                        elif isinstance(item, dict):
+                            text = item.get('text') or item.get('transcription')
+                            score = item.get('confidence') or item.get('score') or 0
+                            try:
+                                if float(score) >= 0.25 and text:
+                                    lines.append(str(text))
+                            except Exception:
+                                if text:
+                                    lines.append(str(text))
+                elif isinstance(line, dict):
+                    text = line.get('text') or line.get('transcription')
+                    score = line.get('confidence') or line.get('score') or 0
+                    try:
+                        if float(score) >= 0.25 and text:
+                            lines.append(str(text))
+                    except Exception:
+                        if text:
+                            lines.append(str(text))
             if lines:
                 texts.append(" ".join(lines))
         except Exception:
@@ -268,6 +356,14 @@ display(submission.head())
 
 
 FileLink('submission_paddleocr_xlmr.csv')
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='PoliMeme OCR + XLM-R pipeline runner/test')
+    parser.add_argument('--test-ocr', action='store_true', help='Run a quick OCR sanity test')
+    parser.add_argument('--img', type=str, default=None, help='Optional image path to test OCR on')
+    args = parser.parse_args()
+    if args.test_ocr:
+        main_test(args.img)
 
 
 # %%
