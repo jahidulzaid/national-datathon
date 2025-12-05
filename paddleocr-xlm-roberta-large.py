@@ -2,18 +2,6 @@
 import subprocess
 import sys
 
-def _pip_install(package):
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install', package])
-
-try:
-    import bitsandbytes
-    import accelerate
-    print("bitsandbytes and accelerate are already installed.")
-except Exception:
-    print("Installing bitsandbytes and accelerate...")
-    _pip_install('bitsandbytes')
-    _pip_install('accelerate')
-    print("Installation complete. Restarting kernel might be required.")
 
 import os
 import pandas as pd
@@ -42,10 +30,10 @@ warnings.filterwarnings("ignore")
 import argparse
 
 # --------------------- PATHS ---------------------
-TRAIN_CSV = '/kaggle/input/poli-meme-decode-cuet-cse-fest/PoliMemeDecode/Train/Train.csv'
-TEST_CSV  = '/kaggle/input/poli-meme-decode-cuet-cse-fest/PoliMemeDecode/Test/Test.csv'
-TRAIN_DIR = '/kaggle/input/poli-meme-decode-cuet-cse-fest/PoliMemeDecode/Train/Image'
-TEST_DIR  = '/kaggle/input/poli-meme-decode-cuet-cse-fest/PoliMemeDecode/Test/Image'
+TRAIN_CSV = 'Train/Train.csv'
+TEST_CSV  = 'Test/Test.csv'
+TRAIN_DIR = 'Train/Image'
+TEST_DIR  = 'Test/Image'
 
 train_df = pd.read_csv(TRAIN_CSV)
 test_df  = pd.read_csv(TEST_CSV)
@@ -278,7 +266,8 @@ train_texts = train_df['final_text'].fillna("no text").tolist()
 train_labels = train_df['Label'].map({'NonPolitical': 0, 'Political': 1}).tolist()
 test_texts = test_df['final_text'].fillna("no text").tolist()
 
-MODEL_NAME = "FacebookAI/xlm-roberta-large"
+# MODEL_NAME = "FacebookAI/xlm-roberta-large"
+MODEL_NAME = "microsoft/deberta-v3-large"
 tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 model = AutoModelForSequenceClassification.from_pretrained(MODEL_NAME, num_labels=2)
 
